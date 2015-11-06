@@ -4,9 +4,12 @@
 import collections
 import sys
 import os
+import pickle
 
+db_path = os.path.relpath("data/database.dat")
 nucleotides = ['A','C','G','T']
 
+db = pickle.load(open (db_path, 'r'))
 # a helper function that may be useful in later on. 
 # input : sequence from datafile from commandline
 # output : probabilistic seq/matrix
@@ -23,7 +26,6 @@ def parse_seq(data):
                                                 prob_seq[nuc,i] = 1
                                         else:
                                                 prob_seq[nuc,i] = 0
-                print prob_seq
                 return prob_seq
 
 # help for general users. To be expanded as we add more parameters
@@ -37,10 +39,10 @@ def help():
     python pasta.py -d query.txt
     """
 
-# this is like main in Java     
+ 
 if __name__ == "__main__":
-        #Just a little hack for those working in IDLE and not off the command line
-        sys.argv = ["pasta.py", "-d query.txt"]
+		#Just a little hack for those working in IDLE and not off the command line
+        #sys.argv = ["pasta.py", "-d query.txt"]
         param = sys.argv
         l = len(param)
         i = 1
