@@ -1,0 +1,61 @@
+#######################################################################
+Regarding your db_idxr_test.py
+
+Running your test python script (only thing I change was the filename into text into test), d = database_indexer(3, 0.054,n,p) print me:
+	{0: ([CAT],[CCT],[CTT],[CGT])}    // notice that I didnt put the '' thing like 'C','A','T'  bcz humans are lazy, and I am one.
+	This tells me that at index 0, these are the seeds that passes the treshold of 0.054   , increasing to somethig higher 0.6 gets CAT only, which makes sense.
+	What makes it weird is that it only gets the seeds at index 0. I tried reading your code but couldn't figure out why. (My guess is you hard-coded to show only the one at index 0, but couldn't find it.)
+	To do the extending part, I kinda need the seeds to run/test. So, I needed seed-generator that I could understand now.
+
+
+#############################################################################################
+Seed/word generator
+	
+I re-read about how BLAST work. It seems it searches for word that are 'perfect match'. Which means it doens't allow for any rooms for mismatches or any errors.
+So, in our case, the 'perfect match' case is when the db has 1.00 probabiltistic score bcz our query is consisted of only 1.0 scores (query is a 'sure sequence').
+
+In our db, staying at w=3, there are 8325 occurences of such matches (meaning 3 times in a row of 1.00), which is very likely to over all 4^3 possibliiltes. ---> update : this is false...all occurences of 3 times in a row of 1.00 is 'AAA'.  I think this is intended by the prof...
+So, my approach of seeds are going over our query seq (ex. AACTG) and the query's w=3 candidates words (this is how BLAST do), AAC,ACT,CTG will be searched in those 6003 occurences of db, therefore significantly reducing the computations to do.
+So, out of those 8325, some numbers of words are found as 'perfect match' and they are our seeds/words.
+
+
+##############################################################################################
+Scoring scheme
+
+Now that we have words of w=3, we need to extend.
+It gets complicated bcz our db is possibliiltes of nuc. Also, BLAST has multiple scoring matrix/scheme depending on their input type and length.
+Our laptop does not have such computing power as BLAST to consider all the parameters that it takes, requiring us to make a 'simple' version.
+
+Things to consider...
+First, we can't mutiply the probabilties bcz that would mean the score will keep on going down, and goes down 'dramatically' in case of one case of anything below 0.7
+Second, our 'best' scenario or match is when a nuc in db has 1.00 and matches the query's nucloetide at that position, which has 1.00 for all nuc.
+	(To consider for conclusion, if our query was probabiltic as well, the matching probabiltic model would be a 'best match' as well. Ex. at pos 0, query got A (0.95) and db got A (0.95))
+Third, as the db's nuc will not always be 1.00, we won't have always perfect match cases. We need a way to somewhat penalize in respect to the difference in probabilties and at the same time, promote the extension.
+
+My current scoring scheme is as follows:
+top = previousTop + probabilityDifference
+bot = prevoiusLength + 1
+
+score = top/bot
+
+ex. We start with a perfect score of 3.0/3.0 with a seed (lets say AAC). 
+    Query seq got T after C (1.00 obviously) and DB got C (lets say 0.6) --> score = (3.0+(1.00-0.6))/(4.00)
+	If DB had C with higher probabilty, it will be penalized less.
+	This way will make probability to be considered as well as the lenth (one mismtach makes less impact with higher length of seq)
+
+
+
+################################################################################################################
+Important lines to mention in report 
+
+A single matrix may nevertheless be reasonably efficient over a relatively broad range of evolutionary change (http://www.ncbi.nlm.nih.gov/blast/html/sub_matrix.html)
+ - Our exapmle is very speicific to one chromosome...so not the most general algorithm
+
+Our goal is to create an analog of BLAST that uses probabiltistic alignment.
+ - Not to challenge the optimiziation of alignment even further. Staying at its optimizign level.
+ - Fewer parameters (one scoring scheme, one seed size, etc) due to the restriction of our computing system compared to BLAST's computing system (our laptop can't handle that much of computation)
+ - Similar to how BLAST align stuff.
+
+If the query was probabiltistic model too..
+ - include in conclusion part ?
+ - 'true' probabiltistic alignment bcz in our case, query is all 1.0
