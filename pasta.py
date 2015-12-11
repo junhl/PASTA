@@ -74,29 +74,59 @@ def extend(seed, query, threshold): # ignore the treshold for now
 	for i in range (len(seed)): # extend for each case
 		numerator = 3.0 # see notice.txt for the reasoning behind this
 		denominator = 3.0
-		
+		seq = seed[i][0] # AAA in our cases...
 		first = seed[i][2][0]
 		end = seed[i][2][1]
 		#print first,end, len(query), (first != 0), (end != len(query)-1)
 		while first != 0 or end != len(query)-1: # extend until both ends are reached to make it false false
 			if first != 0: # if not reached end of left, extend to the left
+				temp_numerator = numerator
 				nuc = query[first-1] # the nucleotide that we are adding to alignment
-				numerator += db[seed[i][1][0]-1, nuc]
 				denominator += 1.0
-				first -= 1
 				
-				seed[i] = (nuc + seed[i][0], (seed[i][1][0]-1, seed[i][1][1]), (seed[i][2][0]-1, seed[i][2][1]))
+				ungap_numerator = temp_numerator + db[seed[i][1][0]-1, nuc]
+				gap_numerator = temp_numerator - 1
+				
+				if (ungap_numerator/denominator >= gap_numerator/denominator):
+					first -= 1
+					numerator = ungap_numerator
+					seq = nuc + seq
+				else:
+					numerator = gap_numerator
+					seq = '-' + seq
+					
+				seed[i] = (seq, (seed[i][1][0]-1, seed[i][1][1]), (seed[i][2][0]-1, seed[i][2][1]))
 				'''seed[i][0] = nuc + seed[i][0] # update the sequence partition
 				seed[i][1][0] = seed[i][1][0]-1 # update the left end of db positions
 				seed[i][2][0] = seed[i][2][0]-1 # update the left end of query position'''
-				
-			if end != len(query)-1: # if not reach the end of sequence, extend to the right. Notice that its not elif
-				nuc = query[end+1] # the nucleotide that we are adding to alignment
-				numerator += db[seed[i][1][1]+1, nuc]
+				'''temp_numerator = numerator
+				nuc = query[first-1] # the nucleotide that we are adding to alignment
 				denominator += 1.0
-				end += 1
-		
-				seed[i] = (seed[i][0]+nuc, (seed[i][1][0], seed[i][1][1]+1), (seed[i][2][0], seed[i][2][1]+1))
+				
+				ungap_numerator = temp_numerator + db[seed[i][1][0]-1, nuc]
+				gap_numerator = temp_numerator - 1
+				
+				if (ungap_numerator/denominator >= gap_numerator/denominator):
+					first -= 1
+				
+				'''
+			if end != len(query)-1: # if not reach the end of sequence, extend to the right. Notice that its not elif
+				temp_numerator = numerator
+				nuc = query[end+1] # the nucleotide that we are adding to alignment
+				denominator += 1.0
+				
+				ungap_numerator = temp_numerator + db[seed[i][1][0]+1, nuc]
+				gap_numerator = temp_numerator - 1
+				
+				if (ungap_numerator/denominator >= gap_numerator/denominator):
+					end += 1
+					numerator = ungap_numerator
+					seq = seq + nuc
+				else:
+					numerator = gap_numerator
+					seq = seq + '-'
+				
+				seed[i] = (seq, (seed[i][1][0], seed[i][1][1]+1), (seed[i][2][0], seed[i][2][1]+1))
 				'''
 				seed[i][0] = seed[i][0] + nuc # update the sequence partition
 				seed[i][1][1] = seed[i][1][1]+1 # update the left end of db positions
