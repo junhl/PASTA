@@ -101,6 +101,9 @@ Test 3: Query is CTGAAAGCCC
 	THe score is lower than the previous 2 tests, with same reasoning. (imrpoved from the worse version idea)
 	It still has an aamzingn score of 0.917, since the perfect score is 1.0/3
 		You can maybe say the probability math thing here
-Test 4: Qeury is ____
-	Trying to locate a 1.0 6 or 7 in a row but can't find the positoin lol
-	I'll find that seq and update
+Test 4: Qeury is AAAAAAA
+	Now we want to test if it checks the perfect alignment (somewhat true-positive)
+	In the db, we located a substring AAAAAAA located at 1349-1355.
+	Our program should be alignnm our query AAAAAAA at this location since it is a perfect match (unless this occurs at other positoins too)
+	Result : best alignment is at 1349-1355 with score of 1.0
+	This is exactly what we wanted !
