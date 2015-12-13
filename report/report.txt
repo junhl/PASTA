@@ -1,0 +1,109 @@
+Notes for the report
+Read the last portion of my notice.txt about important lines to mention
+
+Methods
+
+1- Creation of db : you created the database so you can shortly describe how you did. The matrix thing like below so that all values can be retrieved with (Nuc,position)
+					A   C   G   T
+				0
+				1
+				2
+				.
+				.
+				
+2- Parse query seq : we know that the query sequence to align is definitive (not probability). So, for each of their nucleotide, the probability is 1.0
+					 So, we can turn the query sequence into a similar matrix as well, just that it will consist only of 1.0 or 0.0
+					 
+					   A      C      G      T
+					0  1.0   0.0     0.0   0.0
+					1  0.0   1.0    0.0    0.0   
+					2  0.0   0.0    0.0    1.0
+					.
+					.
+					
+3- Creation of seeds
+	This project is an analog to BLAST. We remind how BLAST work (....)
+	As mentioned, BLAST first looks for the seeds that are perfect matches to substrings.
+	BLAST has many seed length options but with our PC's limited computing power, we only refer w=3
+	So, in our case, we look for 'perfect matches', meaning we don't want any rooms for optional possiblilites.
+	THis means we will look for a substring of db w=3 that are 1.0 1.0 1.0   that will match perfectly a substring of query (reminder: query is 1.0)
+	It turns out in our db, the only w=3 substring that are 1.0 three times in a row are all AAA (8325 occurences)
+	As consequence, all of our seeds will be AAA spreaded trhoughout the db (we store the positions).
+	This implies that our queyr will need to contain AAA somewhere....
+
+4- Extend(seed,db,threshold)
+	scores = []
+	for i from 0 to number of seeds (pretty much for each of all seeds)
+		numerator = 3.0
+		denomiator = 3.0
+		
+		first = seed's first position in respect to query
+		end = seed's last positoin in respect to query
+		
+		while first and end didn't reach the query's first & end positoins:
+			if first != 0 // if first didn't reach position 0 of query
+				nuc = nucleotide to the left of current start
+				denomiator++
+				start--
+				
+				if (scoreFromDB(nuc,positoin) >= threshold) // scoreFromDB is the db matrix we built !!
+					numerator = numerator + scoreFromDB(nuc, positoin)
+					update alignment
+				else
+					numerator = numerator + threshold // this will be the gap
+					update alignment
+				
+			
+			if end != len(query) // if end didn't reach last position of query
+				nuc = nucleotide to the right of current end`
+				denomiator++
+				end++
+				
+				if (scoreFromDB(nuc,positoin) >= threshold) // scoreFromDB is the db matrix we built !!
+					numerator = numerator + scoreFromDB(nuc, positoin)
+					update alignment
+				else
+					numerator = numerator + threshold // this will be the gap
+					update alignment
+	return best scoring alignment
+(not sure if this makes sense to new readers...maybe drawing?)
+	
+Result
+					
+Two scoring scheme : fraction or additive
+Fraction : Starting from 3.0/3.0 , we do (previoiusNumerator + currentScore) / (previousDenominator+1.0)
+Additive : Starting at 3.0, we keep on adding currentScore.
+
+Actually, it turns out to be the same thing. Additive is pretty much the final numerator in Fraction method.
+But maybe we can still say that the fraction one has the sequence length dependency and varies 0 ~ 1  (originality ?)
+
+
+Test 1: Query is AAAGCC
+
+Threshold = 0.25 --> 0.25 will be our default threshold, the reasoning being the random out of 4 nucleotide. Ex. if the probability of a certain nucleotide is 0.10, which is even less than randomly occuring, it is bad. We would put gap instead
+	Best alignment located at 16216 - 16221 with scoring of 0.99333333
+	In  fact their probability of each nucleotide was 1.0 1.0 1.0 0.98 0.99 0.99     which is really a good match (sum them for additive score)
+
+Threshold = 1.0 --> To demonstrate that the threshold is working. With threshold 1.0, it is always better to put the gap instead (of course, except the perfect match of whole query)
+   Best alignment score of 1.0 and the alginemtn is AAA---, at all occurence of AAA (the seed) throughout the whole search.
+   This is expected bcz we intentionally put a non-logical treshold to make the gap always good choice.
+   
+Test 2: Query is AAAGCCC
+	Best alignemtn at 142444 - 142451 with scoring of 0.9925 (or 7.94)
+	We added extra C and the alignment positoin changed.
+	Also, the fraction scoring makes sense with slightly lower score than the test1's score
+	reasoning : the best alignemtn of AAAGCC was at 16216-16221, meaning the alginment at 142444-142450's score was lower.
+				now that we added the extra C, the alignent in respect to 16216 was lower than 142444. In fact, the C's probability at 16222 is 0.00666666, which is very low probability
+				0.9925 < 0.99333333 makes sense bcz we improved from a slightly lower score, but can't pass that score
+Test 3: Query is CTGAAAGCCC
+	Now we are required to extend to both sides from the seed.
+	Best alginemtn at 219971-219980 with score 0.917
+	THe score is lower than the previous 2 tests, with same reasoning. (imrpoved from the worse version idea)
+	It still has an aamzingn score of 0.917, since the perfect score is 1.0/3
+		You can maybe say the probability math thing here
+Test 4: Qeury is AAAAAAA
+	Now we want to test if it checks the perfect alignment (somewhat true-positive)
+	In the db, we located a substring AAAAAAA located at 1349-1355.
+	Our program should be alignnm our query AAAAAAA at this location since it is a perfect match (unless this occurs at other positoins too)
+	Result : best alignment is at 1349-1355 with score of 1.0
+	This is exactly what we wanted !

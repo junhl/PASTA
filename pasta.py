@@ -71,6 +71,7 @@ def makeWords(db_dic, query):
 
 def extend(seed, query, threshold): # ignore the treshold for now
 	scores = []
+	scores2 = []
 	for i in range (len(seed)): # extend for each case
 		numerator = 3.0 # see notice.txt for the reasoning behind this
 		denominator = 3.0
@@ -81,36 +82,36 @@ def extend(seed, query, threshold): # ignore the treshold for now
 		while first != 0 or end != len(query)-1: # extend until both ends are reached to make it false false
 			if first != 0: # if not reached end of left, extend to the left
 				nuc = query[first-1] # the nucleotide that we are adding to alignment
-				numerator += db[seed[i][1][0]-1, nuc]
 				denominator += 1.0
 				first -= 1
 				
-				seed[i] = (nuc + seed[i][0], (seed[i][1][0]-1, seed[i][1][1]), (seed[i][2][0]-1, seed[i][2][1]))
-				'''seed[i][0] = nuc + seed[i][0] # update the sequence partition
-				seed[i][1][0] = seed[i][1][0]-1 # update the left end of db positions
-				seed[i][2][0] = seed[i][2][0]-1 # update the left end of query position'''
+				
+				if (db[seed[i][1][1]+1, nuc] >= threshold):
+					numerator += db[seed[i][1][0]-1, nuc]
+					seed[i] = (nuc + seed[i][0], (seed[i][1][0]-1, seed[i][1][1]), (seed[i][2][0]-1, seed[i][2][1]))
+				
+				else:
+					numerator += threshold
+					seed[i] = (nuc + seed[i][0], (seed[i][1][0]-1, seed[i][1][1]), (seed[i][2][0]-1, seed[i][2][1]))
 				
 			if end != len(query)-1: # if not reach the end of sequence, extend to the right. Notice that its not elif
 				nuc = query[end+1] # the nucleotide that we are adding to alignment
-				numerator += db[seed[i][1][1]+1, nuc]
 				denominator += 1.0
 				end += 1
-		
-				seed[i] = (seed[i][0]+nuc, (seed[i][1][0], seed[i][1][1]+1), (seed[i][2][0], seed[i][2][1]+1))
-				'''
-				seed[i][0] = seed[i][0] + nuc # update the sequence partition
-				seed[i][1][1] = seed[i][1][1]+1 # update the left end of db positions
-				seed[i][2][1] = seed[i][2][1]+1 # update the left end of query position
-	print len(seed)
-	print seed[0]
-	print seed[1]
-	print seed[2]
-	print seed[-2]
-	print seed[-1]'''			
+				
+				if (db[seed[i][1][1]+1, nuc] >= threshold):
+					numerator += db[seed[i][1][1]+1, nuc]
+					seed[i] = (seed[i][0]+nuc, (seed[i][1][0], seed[i][1][1]+1), (seed[i][2][0], seed[i][2][1]+1))
+				
+				else:
+					numerator += threshold
+					seed[i] = (seed[i][0]+'-', (seed[i][1][0], seed[i][1][1]+1), (seed[i][2][0], seed[i][2][1]+1))
+							
 		scores.append(numerator/denominator)			
-	
+		scores2.append(numerator)
 	print scores.index(max(scores)), seed[scores.index(max(scores))]
 	print 'Your query sequence', seed[scores.index(max(scores))][0], ' is best aligned with score of', scores[scores.index(max(scores))], 'at ', seed[scores.index(max(scores))][1]
+	print 'Using method 2 : ', seed[scores2.index(max(scores2))][0], ' is best aligned with score of ', scores2[scores2.index(max(scores2))], 'at', seed[scores2.index(max(scores2))][1]
 	return scores
 # help for general users. To be expanded as we add more parameters
 def help():
@@ -145,7 +146,14 @@ if __name__ == "__main__":
                 sys.exit(1)
 	seq = parse_seq(file_name)
 	print "query is ", seq
+	print db[16216,'A']
+	print db[16217,'A']
+	print db[16218,'A']
+	print db[16219,'G']
+	print db[16220,'C']
+	print db[16221,'C']
+	print db[16622,'C']
 	words = makeWords(db,seq)
 	print len(words)
 	
-	extend(words, seq, 1.0)
+	extend(words, seq, 0.25)
