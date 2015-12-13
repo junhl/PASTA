@@ -34,6 +34,7 @@ Third, as the db's nuc will not always be 1.00, we won't have always perfect mat
 
 My current scoring scheme is as follows:
 top = previousTop + probabilityDifference
+(new idea : previousTop + (currentProb - 0.25)) 
 bot = prevoiusLength + 1
 
 score = top/bot
@@ -59,3 +60,14 @@ Our goal is to create an analog of BLAST that uses probabiltistic alignment.
 If the query was probabiltistic model too..
  - include in conclusion part ?
  - 'true' probabiltistic alignment bcz in our case, query is all 1.0
+
+Seed creation
+ - Horrible to have only one seed possibility of AAA
+ - Maybe intended?
+
+Database load
+ - In terms of running time, database load processs is the contraint limit (takes most of the time). 
+ - Any efficient data load ?
+	- We tried loading as string and it takes longer than pickle
+Algorithm
+ - Taking the best solution at a time.

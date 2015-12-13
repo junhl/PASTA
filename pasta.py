@@ -71,76 +71,47 @@ def makeWords(db_dic, query):
 
 def extend(seed, query, threshold): # ignore the treshold for now
 	scores = []
+	scores2 = []
 	for i in range (len(seed)): # extend for each case
 		numerator = 3.0 # see notice.txt for the reasoning behind this
 		denominator = 3.0
-		seq = seed[i][0] # AAA in our cases...
+		
 		first = seed[i][2][0]
 		end = seed[i][2][1]
 		#print first,end, len(query), (first != 0), (end != len(query)-1)
 		while first != 0 or end != len(query)-1: # extend until both ends are reached to make it false false
 			if first != 0: # if not reached end of left, extend to the left
-				temp_numerator = numerator
 				nuc = query[first-1] # the nucleotide that we are adding to alignment
 				denominator += 1.0
+				first -= 1
 				
-				ungap_numerator = temp_numerator + db[seed[i][1][0]-1, nuc]
-				gap_numerator = temp_numerator - 1
 				
-				if (ungap_numerator/denominator >= gap_numerator/denominator):
-					first -= 1
-					numerator = ungap_numerator
-					seq = nuc + seq
+				if (db[seed[i][1][1]+1, nuc] >= threshold):
+					numerator += db[seed[i][1][0]-1, nuc]
+					seed[i] = (nuc + seed[i][0], (seed[i][1][0]-1, seed[i][1][1]), (seed[i][2][0]-1, seed[i][2][1]))
+				
 				else:
-					numerator = gap_numerator
-					seq = '-' + seq
-					
-				seed[i] = (seq, (seed[i][1][0]-1, seed[i][1][1]), (seed[i][2][0]-1, seed[i][2][1]))
-				'''seed[i][0] = nuc + seed[i][0] # update the sequence partition
-				seed[i][1][0] = seed[i][1][0]-1 # update the left end of db positions
-				seed[i][2][0] = seed[i][2][0]-1 # update the left end of query position'''
-				'''temp_numerator = numerator
-				nuc = query[first-1] # the nucleotide that we are adding to alignment
-				denominator += 1.0
+					numerator += threshold
+					seed[i] = (nuc + seed[i][0], (seed[i][1][0]-1, seed[i][1][1]), (seed[i][2][0]-1, seed[i][2][1]))
 				
-				ungap_numerator = temp_numerator + db[seed[i][1][0]-1, nuc]
-				gap_numerator = temp_numerator - 1
-				
-				if (ungap_numerator/denominator >= gap_numerator/denominator):
-					first -= 1
-				
-				'''
 			if end != len(query)-1: # if not reach the end of sequence, extend to the right. Notice that its not elif
-				temp_numerator = numerator
 				nuc = query[end+1] # the nucleotide that we are adding to alignment
 				denominator += 1.0
+				end += 1
 				
-				ungap_numerator = temp_numerator + db[seed[i][1][0]+1, nuc]
-				gap_numerator = temp_numerator - 1
+				if (db[seed[i][1][1]+1, nuc] >= threshold):
+					numerator += db[seed[i][1][1]+1, nuc]
+					seed[i] = (seed[i][0]+nuc, (seed[i][1][0], seed[i][1][1]+1), (seed[i][2][0], seed[i][2][1]+1))
 				
-				if (ungap_numerator/denominator >= gap_numerator/denominator):
-					end += 1
-					numerator = ungap_numerator
-					seq = seq + nuc
 				else:
-					numerator = gap_numerator
-					seq = seq + '-'
-				
-				seed[i] = (seq, (seed[i][1][0], seed[i][1][1]+1), (seed[i][2][0], seed[i][2][1]+1))
-				'''
-				seed[i][0] = seed[i][0] + nuc # update the sequence partition
-				seed[i][1][1] = seed[i][1][1]+1 # update the left end of db positions
-				seed[i][2][1] = seed[i][2][1]+1 # update the left end of query position
-	print len(seed)
-	print seed[0]
-	print seed[1]
-	print seed[2]
-	print seed[-2]
-	print seed[-1]'''			
+					numerator += threshold
+					seed[i] = (seed[i][0]+'-', (seed[i][1][0], seed[i][1][1]+1), (seed[i][2][0], seed[i][2][1]+1))
+							
 		scores.append(numerator/denominator)			
-	
+		scores2.append(numerator)
 	print scores.index(max(scores)), seed[scores.index(max(scores))]
 	print 'Your query sequence', seed[scores.index(max(scores))][0], ' is best aligned with score of', scores[scores.index(max(scores))], 'at ', seed[scores.index(max(scores))][1]
+	print 'Using method 2 : ', seed[scores2.index(max(scores2))][0], ' is best aligned with score of ', scores2[scores2.index(max(scores2))], 'at', seed[scores2.index(max(scores2))][1]
 	return scores
 # help for general users. To be expanded as we add more parameters
 def help():
@@ -175,7 +146,14 @@ if __name__ == "__main__":
                 sys.exit(1)
 	seq = parse_seq(file_name)
 	print "query is ", seq
+	print db[16216,'A']
+	print db[16217,'A']
+	print db[16218,'A']
+	print db[16219,'G']
+	print db[16220,'C']
+	print db[16221,'C']
+	print db[16622,'C']
 	words = makeWords(db,seq)
 	print len(words)
 	
-	extend(words, seq, 1.0)
+	extend(words, seq, 0.25)
